@@ -7,22 +7,30 @@ In this example, we will change CIDR `/26` to the new `/28`
 
 ### Work Plan
 1. We need to change the CIDR in the desired pool
-> kubectl edit ippool `$NEEDED_POOL_NAME` #once
+```console
+kubectl edit ippool `$NEEDED_POOL_NAME` #once
+```
 
-2. Then we need to take the `$NODE_NAME` node off the load
-> kubectl drain $NODE_NAME --delete-local-data=true --ignore-daemonsets=true
-> kubectl taint nodes $NODE_NAME key1=value1:NoExecute #if needed
+3. Then we need to take the `$NODE_NAME` node off the load
+```console
+kubectl drain $NODE_NAME --delete-local-data=true --ignore-daemonsets=true
+kubectl taint nodes $NODE_NAME key1=value1:NoExecute #if needed
+```
 
 3. Then we remove ipamblocks and blockaffinities for the `$NODE_NAME`.
-> kubectl delete ipamblocks.crd.projectcalico.org $NODE_NAME-POOL
-> kubectl delete blockaffinities.crd.projectcalico.org $NODE_NAME-$NODE_NAME-POOL
+```console
+kubectl delete ipamblocks.crd.projectcalico.org $NODE_NAME-POOL
+kubectl delete blockaffinities.crd.projectcalico.org $NODE_NAME-$NODE_NAME-POOL
+```
 
 4. Untaint and uncordon the `$NODE_NAME`
-> kubectl taint nodes $NODE_NAME key1=value1:NoExecute-; kubectl uncordon $NODE_NAME
+```console
+kubectl taint nodes $NODE_NAME key1=value1:NoExecute-; kubectl uncordon $NODE_NAME
+```
 
-5. At the very beginning of the work, redeploy a random, non-dangerous deployment, check that ipamblock is created on the node with the required mask and the pods start successfully.
+6. At the very beginning of the work, redeploy a random, non-dangerous deployment, check that ipamblock is created on the node with the required mask and the pods start successfully.
 
-6. Then, repeat steps 2-4 for all nodes.
+7. Then, repeat steps 2-4 for all nodes.
 
 ### Checking
 In the proccess of the work watch the logs of the `Scheduler`, `Kube-controller-manager` and check how the `Pods` are lifted.
